@@ -1,42 +1,49 @@
-import {computed, watch} from 'vue'
-import * as yup from 'yup'
 import {useField, useForm} from 'vee-validate'
+import * as yup from 'yup'
+import {computed, watch} from 'vue'
+import {useStore} from 'vuex'
+import {useRoute} from 'vue-router'
 
-export  function useLoginForm() {
-        const {handleSubmit, isSubmitting, submitCount} = useForm()
+export function useLoginForm() {
+    const store = useStore()
+    const route = useRoute()
+    const {handleSubmit, isSubmitting, submitCount} = useForm()
 
-        const {value: email, errorMessage: eError, handleBlur: eBlur} = useField(
-            'email',
-            yup
-            .string()
-            .trim()
-            .required('Пожалуйста введите email')
-            .email('Необходимо ввести корректный email')
-        )
+    const {value: email, errorMessage: eError, handleBlur: eBlur} = useField(
+        'email',
+        yup
+        .string()
+        .trim()
+        .required('Пожалуйста введите email')
+        .email('Необходимо ввести корректный email')
+    )
 
-        const MIN_LENGTH = 6
+    const MIN_LENGTH = 6
 
-        const {value: password, errorMessage: pError, handleBlur: pBlur} = useField(
-            'password',
-            yup
-            .string()
-            .trim()
-            .required('Пожалуйста введите пароль')
-            .min(MIN_LENGTH, `Пароль не может быть меньше ${MIN_LENGTH} символов`)
-        )
-
+    const {value: password, errorMessage: pError, handleBlur: pBlur} = useField(
+        'password',
+        yup
+        .string()
+        .trim()
+        .required('Пожалуйста введите пароль')
+        .min(MIN_LENGTH, `Пароль не может быть меньше ${MIN_LENGTH} символов`)
+    )
         
-        const isTooManyAttempts = computed(() => submitCount.value >= 3)
+    const isTooManyAttempts = computed(() => submitCount.value >= 3)
 
-        watch(isTooManyAttempts, val => {
-            if(val) {
-                setTimeout(() => submitCount.value = 0 , 1500)
-            }
-        })
+    watch(isTooManyAttempts, val => {
+        if (val) {
+        setTimeout(() => submitCount.value = 0, 1500)
+        }
+    })
 
-        const onSubmit = handleSubmit(values => {
-        })
-
+    const onSubmit = handleSubmit(async values => {
+        try {
+        await store.dispatch('auth/login', values)
+        route.push('/')
+        } catch (e) {
+        }
+    })
         return {
             email,
             password,
